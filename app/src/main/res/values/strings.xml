@@ -17,7 +17,7 @@
     <string name="satellite_map">Satellite Map</string>
     <string name="terrain_map">Terrain Map</string>
     <string name="lat_long_snippet">Lat: %1$.5f, Long: %2$.5f</string>
-    <string name="dropped_pin">Dropped Pin</string>
+    <string name="dropped_pin">Custom selected location</string>
     <string name="poi">poi</string>
     <string name="location_required_error">Location services must be enabled to use the app</string>
     <string name="permission_denied_explanation">You need to grant location permission in order to select the location.</string>
@@ -46,4 +46,8 @@
     <string name="icon">Icon</string>
     <string name="reminder_details">Reminder Details</string>
     <string name="unknown_geofence_error">Unknown error: the Geofence service is not available now</string>
+    <string name="you_have_reached_a_saved_location">You have reached a saved location</string>
+    <string name="title">Title :</string>
+    <string name="description">Description :</string>
+    <string name="location">Location :</string>
 </resources>

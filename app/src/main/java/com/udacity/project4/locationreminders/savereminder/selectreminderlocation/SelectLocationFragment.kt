@@ -4,20 +4,22 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import androidx.navigation.Navigation
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
 import com.google.android.material.snackbar.Snackbar
@@ -25,10 +27,8 @@ import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
-import com.udacity.project4.locationreminders.savereminder.SaveReminderFragmentDirections
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
-import kotlinx.coroutines.awaitAll
 import org.koin.android.ext.android.inject
 import java.util.*
 
@@ -36,11 +36,11 @@ import java.util.*
 class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     //Use Koin to get the view model of the SaveReminder
     private val  REQUEST_LOCATION_PERMISSION=1
+    private val  REQUEST_PERMISSION=2
     override val _viewModel: SaveReminderViewModel by inject()
     private var isMarkerAdded=false
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var confirmDialog:AlertDialog
-    private var isLocationConfirmed=false
     private lateinit var map:GoogleMap
     private lateinit var selectedPOI: PointOfInterest
     override fun onCreateView(
@@ -59,7 +59,6 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
 
 //        TODO: zoom to the user location after taking his permission
 
-
         binding.saveBtn.setOnClickListener {
             if (isMarkerAdded)
                 onLocationSelected()
@@ -71,26 +70,6 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
 
 
         return binding.root
-    }
-
-    private fun initializedConfirmDialog() {
-        val confirmDialogBuilder = AlertDialog.Builder(context).apply {
-            setTitle(R.string.app_name)
-            setMessage("Save selected location ?")
-            setIcon(R.drawable.icauncherforeground)
-            setPositiveButton("Yes") { dialog, id ->
-                dialog.dismiss()
-                isLocationConfirmed=true
-            }
-            setNegativeButton(
-                "No"
-            ) { dialog, id ->
-                dialog.dismiss()
-                isLocationConfirmed=false
-            }
-        }
-
-        confirmDialog = confirmDialogBuilder.create()
     }
 
 
@@ -151,6 +130,7 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
+
         map = googleMap
         map.setMapStyle(MapStyleOptions.loadRawResourceStyle(requireContext(),R.raw.map_style))
        setMapLongClick(map)
@@ -158,12 +138,29 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
        enableMyLocation()
     }
     //Check if Location Permissions are granted
+
     @Suppress("DEPRECATED_IDENTITY_EQUALS")
     private fun isPermissionGranted(): Boolean{
         return ContextCompat.checkSelfPermission(
             requireContext(),
             Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            map.isMyLocationEnabled=true
+        }
+    }
+
+    
 
     @SuppressLint("MissingPermission")
     private fun enableMyLocation(){
@@ -175,13 +172,27 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
         }
         else{
             Snackbar.make(requireView(),"Location permission is needed to Get Current Location",Snackbar.ANIMATION_MODE_SLIDE).show()
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                REQUEST_LOCATION_PERMISSION
-            )
-        }
+            val req=   arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION)
 
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
+                    req,
+                    REQUEST_LOCATION_PERMISSION
+                )
+
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val uri = Uri.fromParts("package","com.udacity.project4", null)
+                intent.data = uri
+                startActivity(intent)
+                Toast.makeText(requireContext(),"Please allow location permission 'All the time'",Toast.LENGTH_LONG).show()
+            }
+
+        }
     }
 
     //Function attach Point of Interest click listener to a given map object
