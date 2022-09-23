@@ -36,7 +36,7 @@ import java.util.*
 class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     //Use Koin to get the view model of the SaveReminder
     private val  REQUEST_LOCATION_PERMISSION=1
-    private val  REQUEST_PERMISSION=2
+
     override val _viewModel: SaveReminderViewModel by inject()
     private var isMarkerAdded=false
     private lateinit var binding: FragmentSelectLocationBinding
@@ -148,23 +148,34 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
 
     override fun onResume() {
         super.onResume()
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            map.isMyLocationEnabled=true
-        }
+//        if (ActivityCompat.checkSelfPermission(
+//                requireContext(),
+//                Manifest.permission.ACCESS_FINE_LOCATION
+//            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+//                requireContext(),
+//                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+//            ) == PackageManager.PERMISSION_GRANTED
+//        ) {
+//            map?.isMyLocationEnabled =true
+//        }
     }
 
     
 
-    @SuppressLint("MissingPermission")
+
     private fun enableMyLocation(){
         if(isPermissionGranted()){
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+                val hasBackgroundPermission = ActivityCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
+                    arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                    REQUEST_LOCATION_PERMISSION
+                )
+            }
             map.isMyLocationEnabled=true
 //            var s=LocationServices.getFusedLocationProviderClient(requireActivity()).lastLocation.result
 //            var home=LatLng(s.latitude,s.longitude)
@@ -172,9 +183,8 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
         }
         else{
             Snackbar.make(requireView(),"Location permission is needed to Get Current Location",Snackbar.ANIMATION_MODE_SLIDE).show()
-            val req=   arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION)
+            val req=   arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION)
 
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
                 ActivityCompat.requestPermissions(
                     requireActivity(),
                     req,
@@ -182,17 +192,30 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
                 )
 
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                val uri = Uri.fromParts("package","com.udacity.project4", null)
-                intent.data = uri
-                startActivity(intent)
-                Toast.makeText(requireContext(),"Please allow location permission 'All the time'",Toast.LENGTH_LONG).show()
+//                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//                val uri = Uri.fromParts("package","com.udacity.project4", null)
+//                intent.data = uri
+//                startActivity(intent)
+//                Toast.makeText(requireContext(),"Please allow location permission 'All the time'",Toast.LENGTH_LONG).show()
+                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),REQUEST_LOCATION_PERMISSION)
             }
 
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+
+//                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//                val uri = Uri.fromParts("package","com.udacity.project4", null)
+//                intent.data = uri
+//                startActivity(intent)
+            if (ActivityCompat.checkSelfPermission(requireContext(),Manifest.permission.ACCESS_BACKGROUND_LOCATION)!=PackageManager.PERMISSION_GRANTED)
+                Toast.makeText(requireActivity().applicationContext,"Please allow location permission \n 'All the time'",Toast.LENGTH_LONG).show()
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),REQUEST_LOCATION_PERMISSION)
+        }
+
     }
 
     //Function attach Point of Interest click listener to a given map object
