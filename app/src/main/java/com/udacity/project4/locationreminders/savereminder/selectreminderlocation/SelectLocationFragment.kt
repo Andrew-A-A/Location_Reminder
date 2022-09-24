@@ -161,7 +161,6 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
                 val latLng=LatLng(location.latitude,location.longitude)
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,zoomLevel))
             }
-
         }
 
     }
@@ -177,8 +176,16 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
 
-        if (isMapReady&&ActivityCompat.checkSelfPermission(requireContext(),Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED)
-            map.isMyLocationEnabled=true
+        if (isMapReady&&ActivityCompat.checkSelfPermission(requireContext(),Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED) {
+            map.isMyLocationEnabled = true
+            fusedLocationClient.lastLocation.addOnSuccessListener { location:Location? ->
+                if (location!=null){
+                    val zoomLevel=16f
+                    val latLng=LatLng(location.latitude,location.longitude)
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,zoomLevel))
+                }
+            }
+        }
 
      if (ActivityCompat.checkSelfPermission(requireContext(),Manifest.permission.ACCESS_BACKGROUND_LOCATION)==PackageManager.PERMISSION_GRANTED)
          Snackbar.make(requireView(),"Permission Granted",Snackbar.LENGTH_SHORT).show()
