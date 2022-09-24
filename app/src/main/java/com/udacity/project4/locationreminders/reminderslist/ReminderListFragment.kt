@@ -1,11 +1,12 @@
 package com.udacity.project4.locationreminders.reminderslist
 
+import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
+import android.location.LocationManager
 import android.os.Bundle
 import android.view.*
 import androidx.databinding.DataBindingUtil
-import com.firebase.ui.auth.AuthUI
-import com.google.android.gms.auth.api.Auth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.udacity.project4.R
@@ -13,7 +14,6 @@ import com.udacity.project4.authentication.AuthenticationActivity
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentRemindersBinding
-import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import com.udacity.project4.utils.setTitle
 import com.udacity.project4.utils.setup
@@ -52,6 +52,20 @@ class ReminderListFragment : BaseFragment() {
         }
     }
 
+    private fun checkGPSStatus(){
+        val locationManager=requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            AlertDialog.Builder(context).apply {
+                setTitle(getString(R.string.app_name))
+                setIcon(R.drawable.icauncherforeground)
+                setMessage("GPS is off, please turn GPS on")
+                setPositiveButton(getString(R.string.ok)){_,_->
+                }
+                    .create().show()
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         //load the reminders list on the ui
@@ -65,6 +79,7 @@ class ReminderListFragment : BaseFragment() {
                 ReminderListFragmentDirections.toSaveReminder()
             )
         )
+        checkGPSStatus()
     }
 
     private fun setupRecyclerView() {

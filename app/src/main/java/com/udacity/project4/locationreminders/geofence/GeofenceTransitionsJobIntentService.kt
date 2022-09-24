@@ -2,23 +2,19 @@ package com.udacity.project4.locationreminders.geofence
 
 import android.content.Context
 import android.content.Intent
-import android.nfc.Tag
-import android.text.TextUtils
 import android.util.Log
 import androidx.core.app.JobIntentService
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingEvent
+import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
-import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
+import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.sendNotification
 import kotlinx.coroutines.*
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.CoroutineContext
-import com.google.android.gms.location.Geofence
-import com.google.android.gms.location.GeofencingEvent
-import com.google.android.material.snackbar.Snackbar
-import com.udacity.project4.locationreminders.data.ReminderDataSource
-import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
-import org.koin.android.ext.android.get
+
 private const val TAG = "GeofenceService"
 class GeofenceTransitionsJobIntentService : JobIntentService(),CoroutineScope {
 
@@ -53,7 +49,7 @@ class GeofenceTransitionsJobIntentService : JobIntentService(),CoroutineScope {
     //DONE: get the request id of the current geofence
     private fun sendNotification(triggeringGeoFences: List<Geofence>) {
         val requestId = triggeringGeoFences[0].requestId
-        Log.e("lol","sendNotification() Called")
+        Log.i(TAG,"sendNotification() Called")
         //Get the local repository instance
         val remindersLocalRepository: ReminderDataSource by inject()
 //        Interaction to the repository has to be through a coroutine scope

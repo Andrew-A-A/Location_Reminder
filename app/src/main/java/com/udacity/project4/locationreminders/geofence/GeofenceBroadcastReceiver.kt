@@ -23,18 +23,13 @@ import com.udacity.project4.locationreminders.savereminder.SaveReminderFragment
 private const val TAG = "GeofenceReceiver"
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
-    companion object {
-        val TAG = "lol"
-    }
-
     override fun onReceive(context: Context, intent: Intent) {
 
         if (intent.action == SaveReminderFragment.ACTION_GEOFENCE_EVENT) {
             val geoFencingEvent = GeofencingEvent.fromIntent(intent)
 
             if (geoFencingEvent!!.hasError()) {
-                val errorMessage ="Fencing Error"
-                Log.e(TAG, errorMessage)
+                Log.e(TAG, "Fencing Error")
                 return
             }
 
@@ -44,7 +39,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                     geoFencingEvent.triggeringGeofences!!.isNotEmpty() ->
                         GeofenceTransitionsJobIntentService.enqueueWork(context, intent)
                     else -> {
-                        Log.e(TAG, "No Geofence Trigger Found! Abort mission!")
+                        Log.e(TAG, "No Geofence Trigger Found!")
                         return
                     }
                 }
@@ -53,7 +48,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
     }
 
-    private fun getErrorString(errorCode: Int): String? {
+    private fun getErrorString(errorCode: Int): String {
         return when (errorCode) {
             GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE -> "GeoFence not available"
             GeofenceStatusCodes.GEOFENCE_TOO_MANY_GEOFENCES -> "Too many GeoFences"

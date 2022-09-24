@@ -65,17 +65,6 @@
             app:layout_constraintVertical_bias="1.0"
             tools:text="@string/dropped_pin" />
 
-        <ImageView
-
-            android:id="@+id/imageView3"
-            android:layout_width="245dp"
-            android:layout_height="283dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/details_ic"
-            android:contentDescription="@string/icon" />
-
         <TextView
             android:id="@+id/textView5"
             android:layout_width="wrap_content"
@@ -83,10 +72,13 @@
             android:text="@string/you_have_reached_a_saved_location"
             android:textColor="@color/green"
             android:textStyle="bold"
+            app:drawableBottomCompat="@drawable/fui_ic_check_circle_black_128dp"
+            app:layout_constraintBottom_toTopOf="@+id/ok_btn"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.497"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView3"
-            app:drawableBottomCompat="@drawable/fui_ic_check_circle_black_128dp" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.113" />
 
         <TextView
             android:id="@+id/textView6"
@@ -105,12 +97,12 @@
             android:id="@+id/textView7"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="20dp"
             android:text="@string/description"
             android:textSize="24sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.112"
+            app:layout_constraintHorizontal_bias="0.058"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView6" />
 
@@ -126,7 +118,8 @@
             app:layout_constraintEnd_toEndOf="@+id/textView7"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/textView7"
-            app:layout_constraintTop_toBottomOf="@+id/textView7" />
+            app:layout_constraintTop_toBottomOf="@+id/textView7"
+            app:layout_constraintVertical_bias="0.27" />
 
         <Button
             android:id="@+id/ok_btn"

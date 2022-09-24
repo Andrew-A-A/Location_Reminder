@@ -19,10 +19,12 @@ import androidx.databinding.DataBindingUtil
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
 import com.google.android.material.snackbar.Snackbar
+import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -31,18 +33,20 @@ import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
 import java.util.*
-
-
+private const val  REQUEST_LOCATION_PERMISSION=1
+val androidQ=(Build.VERSION.SDK_INT == Build.VERSION_CODES.Q)
+val androidR_Plus=(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
 class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     //Use Koin to get the view model of the SaveReminder
-    private val  REQUEST_LOCATION_PERMISSION=1
 
+    private var isMapReady=false
     override val _viewModel: SaveReminderViewModel by inject()
     private var isMarkerAdded=false
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var confirmDialog:AlertDialog
     private lateinit var map:GoogleMap
     private lateinit var selectedPOI: PointOfInterest
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -74,6 +78,7 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
 
 
     private fun onLocationSelected() {
+
         val confirmDialogBuilder = AlertDialog.Builder(context).apply {
             setTitle(R.string.app_name)
             setMessage("Save selected location ?")
@@ -130,7 +135,7 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-
+        isMapReady=true
         map = googleMap
         map.setMapStyle(MapStyleOptions.loadRawResourceStyle(requireContext(),R.raw.map_style))
        setMapLongClick(map)
@@ -148,28 +153,21 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
 
     override fun onResume() {
         super.onResume()
-//        if (ActivityCompat.checkSelfPermission(
-//                requireContext(),
-//                Manifest.permission.ACCESS_FINE_LOCATION
-//            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-//                requireContext(),
-//                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-//            ) == PackageManager.PERMISSION_GRANTED
-//        ) {
-//            map?.isMyLocationEnabled =true
-//        }
+
+        if (isMapReady&&ActivityCompat.checkSelfPermission(requireContext(),Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED)
+            map.isMyLocationEnabled=true
+
+     if (ActivityCompat.checkSelfPermission(requireContext(),Manifest.permission.ACCESS_BACKGROUND_LOCATION)==PackageManager.PERMISSION_GRANTED)
+         Snackbar.make(requireView(),"Permission Granted",Snackbar.LENGTH_SHORT).show()
     }
 
     
 
 
+    @SuppressLint("InlinedApi")
     private fun enableMyLocation(){
         if(isPermissionGranted()){
-            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                val hasBackgroundPermission = ActivityCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
+            if (androidQ) {
                 ActivityCompat.requestPermissions(
                     requireActivity(),
                     arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
@@ -177,12 +175,21 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
                 )
             }
             map.isMyLocationEnabled=true
-//            var s=LocationServices.getFusedLocationProviderClient(requireActivity()).lastLocation.result
-//            var home=LatLng(s.latitude,s.longitude)
-//            map.moveCamera(CameraUpdateFactory.newLatLng(home))
         }
         else{
-            Snackbar.make(requireView(),"Location permission is needed to Get Current Location",Snackbar.ANIMATION_MODE_SLIDE).show()
+            // Permission denied.
+            Snackbar.make(
+                requireView(),
+                R.string.permission_denied_explanation, Snackbar.LENGTH_INDEFINITE
+            )
+                .setAction(R.string.settings) {
+                    // Displays App settings screen.
+                    startActivity(Intent().apply {
+                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    })
+                }.show()
             val req=   arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION)
 
                 ActivityCompat.requestPermissions(
@@ -192,28 +199,44 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
                 )
 
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-
-//                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                val uri = Uri.fromParts("package","com.udacity.project4", null)
-//                intent.data = uri
-//                startActivity(intent)
-//                Toast.makeText(requireContext(),"Please allow location permission 'All the time'",Toast.LENGTH_LONG).show()
-                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),REQUEST_LOCATION_PERMISSION)
+            if (androidR_Plus) {
+                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    ,REQUEST_LOCATION_PERMISSION)
             }
 
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (androidR_Plus) {
 
-//                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                val uri = Uri.fromParts("package","com.udacity.project4", null)
-//                intent.data = uri
-//                startActivity(intent)
-            if (ActivityCompat.checkSelfPermission(requireContext(),Manifest.permission.ACCESS_BACKGROUND_LOCATION)!=PackageManager.PERMISSION_GRANTED)
-                Toast.makeText(requireActivity().applicationContext,"Please allow location permission \n 'All the time'",Toast.LENGTH_LONG).show()
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),REQUEST_LOCATION_PERMISSION)
+
+            if (ActivityCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                Toast.makeText(requireContext(),"App needs 'All the time' location permission To set Geofence",
+                    Toast.LENGTH_LONG).show()
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
+                    arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                    REQUEST_LOCATION_PERMISSION
+                )
+                Snackbar.make(
+                    requireView(),
+                    "'All The time' Location needed to set Geofence", Snackbar.LENGTH_INDEFINITE
+                )
+                    .setAction(R.string.settings) {
+                        // Displays App settings screen.
+                        startActivity(Intent().apply {
+                            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        })
+                    }.show()
+            }
         }
 
     }
@@ -231,6 +254,7 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
             poiMarker?.showInfoWindow()
             isMarkerAdded=true
             selectedPOI=poi
+            map.addCircle(CircleOptions().center(poi.latLng).radius(120.0))
         }
     }
     //Function attach long click listener on a given map object
@@ -251,10 +275,17 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
                     .title(getString(R.string.dropped_pin))
                     .snippet(snippet)
             )
+            map.addCircle(CircleOptions().center(it).radius(120.0))
             if (marker!=null)
             selectedPOI= PointOfInterest(marker.position,marker.title.toString(),marker.title.toString())
             isMarkerAdded=true
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        isMapReady=false
+    }
+
 
 }
