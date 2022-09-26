@@ -34,9 +34,9 @@ ext {
     materialVersion = '1.6.1'
     fragmentVersion = '1.5.2'//''1.4.1' ci sono modifiche su fragment test, da studiare aggiornamento
     recyclerViewVersion = '1.2.1'
-    mockitoVersion = '2.8.9'
+    mockitoVersion = '3.4.6'
     constraintVersion = '2.1.4'
-    dexMakerVersion = '2.12.1'
+    dexMakerVersion = '2.28.1'
     coroutinesVersion = '1.6.4'
     roomVersion = '2.4.3'
     koinVersion = '2.2.0'

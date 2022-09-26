@@ -34,13 +34,13 @@ import org.koin.android.ext.android.inject
 class SaveReminderFragment : BaseFragment() {
 
     companion object {
-        val TAG = SaveReminderFragment::class.java.simpleName
+        const val TAG = "SaveReminderFragment"
         const val ACTION_GEOFENCE_EVENT = "geofence_event"
         const val DEFAULT_GEOFENCE_RADIUS = 120F
     }
 
     private lateinit var geoFencingClient: GeofencingClient
-    //Get the view model this time as a single to be shared with the another fragment
+    //Get the view model in a local variable to access data
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSaveReminderBinding
 
@@ -64,7 +64,6 @@ class SaveReminderFragment : BaseFragment() {
         super.onActivityCreated(savedInstanceState)
         binding.lifecycleOwner = viewLifecycleOwner
         binding.selectLocation.setOnClickListener {
-            //            Navigate to another fragment to get the user location
             _viewModel.navigationCommand.value =
                 NavigationCommand.To(SaveReminderFragmentDirections.actionSaveReminderFragmentToSelectLocationFragment())
         }
@@ -78,13 +77,11 @@ class SaveReminderFragment : BaseFragment() {
             val latitude = _viewModel.latitude.value ?: 0.0
             val longitude = _viewModel.longitude.value ?: 0.0
 
-//            DONE: use the user entered reminder details to:
-//             1) add a geofencing request
-//             2) save the reminder to the local db
-
+            //Create reminder and save it
             val reminder = ReminderDataItem(title, description, location, latitude, longitude)
             saveReminder(reminder)
 
+            //Create a geofence request and save it
             val geofence = createGeofence(LatLng(latitude, longitude), reminder.id)
             val geofenceRequest = createGeofenceRequest(geofence)
 
@@ -121,13 +118,6 @@ class SaveReminderFragment : BaseFragment() {
         geoFencingClient.removeGeofences(geofencePIntent).run {
             addOnCompleteListener {
                 geoFencingClient.addGeofences(geoFencingRequest, geofencePIntent).run {
-//                    addOnSuccessListener {
-//                        activity?.let {
-//                            Snackbar.make(requireView(), "Geofence Added",
-//                                Snackbar.LENGTH_SHORT)
-//                                .show()
-//                        }
-//                    }
                     addOnFailureListener {
                         activity?.let {
                             Toast.makeText(
@@ -148,9 +138,4 @@ class SaveReminderFragment : BaseFragment() {
         _viewModel.validateAndSaveReminder(reminder)
         _viewModel.onClear()
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
 }
