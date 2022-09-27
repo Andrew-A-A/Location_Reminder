@@ -83,10 +83,11 @@ class RemindersDaoTest {
             database.reminderDao().saveReminder(reminder2)
             database.reminderDao().saveReminder(reminder3)
 
-            //WHEN - get the reminder from database by id
+            //WHEN - get the reminders list from database
             val loadedReminders=database.reminderDao().getReminders()
 
-            //THEN - verify that the loaded reminder contains same data of added reminder
+            //THEN - verify that the loaded reminders list size is 3
+            // (Same as number of added reminders)
             assertThat(loadedReminders.size,`is`(3))
         }
     }
@@ -107,11 +108,11 @@ class RemindersDaoTest {
             database.reminderDao().saveReminder(reminder2)
             database.reminderDao().saveReminder(reminder3)
 
-            //WHEN - get the reminder from database by id
+            //WHEN - Delete all Reminders
             database.reminderDao().deleteAllReminders()
             val loadedReminders=database.reminderDao().getReminders()
 
-            //THEN - verify that the loaded reminder contains same data of added reminder
+            //THEN - verify that the loaded reminders list is empty
             assertThat(loadedReminders.size,`is`(0))
         }
     }

@@ -13,6 +13,7 @@ import androidx.test.filters.MediumTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.udacity.project4.R
 import com.udacity.project4.locationreminders.savereminder.selectreminderlocation.SelectLocationFragment
+import kotlinx.coroutines.test.runBlockingTest
 import org.hamcrest.core.AllOf.allOf
 import org.junit.Assert.*
 import org.junit.Test
@@ -55,6 +56,7 @@ class SaveReminderFragmentTest{
 
     @Test
     fun clickSelectLocation(){
+        runBlockingTest {
         //GIVEN - On the save reminder screen
         val scenario= launchFragmentInContainer<SaveReminderFragment>(Bundle(),R.style.AppTheme)
         val navController= mock(NavController::class.java)
@@ -69,6 +71,7 @@ class SaveReminderFragmentTest{
         verify(navController).navigate(SaveReminderFragmentDirections
             .actionSaveReminderFragmentToSelectLocationFragment())
 
+    }
     }
 
 }
