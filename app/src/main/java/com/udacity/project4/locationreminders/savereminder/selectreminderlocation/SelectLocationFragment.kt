@@ -88,8 +88,8 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
             if (isMarkerAdded)
                 onLocationSelected()
             else {
-                Toast.makeText(requireContext(), "Please select location", Toast.LENGTH_LONG).show()
-                Log.e("SelectLocationFragment","No Location")
+                Snackbar.make(requireView(), R.string.please_select_location, Snackbar.LENGTH_LONG).show()
+                Log.e(TAG,"No Location")
             }
         }
 
@@ -213,6 +213,7 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     private fun enableMyLocation(){
         if(isPermissionGranted()){
             if (androidQ) {
+                if (!isBackgroundPermissionGranted())
                 ActivityCompat.requestPermissions(
                     requireActivity(),
                     arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
@@ -351,7 +352,11 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
         //Confirm that background permission is granted in case of android Q+
         if (androidQ|| androidR_Plus) {
             if (isBackgroundPermissionGranted())
-                Snackbar.make(requireView(), "Permission Granted", Snackbar.LENGTH_SHORT).show()
+              Toast.makeText(requireContext(), "Permission Granted", Toast.LENGTH_SHORT).show()
+            else {
+                permissionsSnackBar_R_plus = makePermissionsSnackBarR()
+                permissionsSnackBar_R_plus.show()
+            }
         }
     }
     override fun onDestroy() {
@@ -362,3 +367,4 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
         permissionsSnackBarQ.dismiss()
     }
 }
+private const val TAG="SelectLocationFragment"

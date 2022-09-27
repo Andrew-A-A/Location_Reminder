@@ -24,13 +24,17 @@ class AuthenticationActivityTest{
     fun clickLoginButton_NavigateToFirebaseLogin(){
         //GIVEN - On the Authentication activity
         launchActivity<AuthenticationActivity>().use {
-            it.moveToState(Lifecycle.State.RESUMED)
+            //If Device already logged in the Activity will be destroyed automatically
+            if (it.state != Lifecycle.State.DESTROYED) {
+                //Device is not logged in
+                it.moveToState(Lifecycle.State.RESUMED)
 
         //WHEN - Click "Login button"
-            onView(withId(R.id.login_btn)).perform(click())
+                onView(withId(R.id.login_btn)).perform(click())
 
         //THEN - Verify change of activity lifecycle as we navigate to the Fire base Login
-            assertThat(it.state,`is` (Lifecycle.State.CREATED))
+                assertThat(it.state, `is`(Lifecycle.State.CREATED))
+            }
         }
 
     }
