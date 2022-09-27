@@ -40,7 +40,11 @@
     <string name="geofence_too_many_geofences">Your app has registered too many geofences.</string>
     <string name="geofence_too_many_pending_intents">You have provided too many PendingIntents to the addGeofences() call.</string>
     <string name="error_adding_geofence">Error Happened, Can\'t Add Geofence</string>
-    <string name="google_maps_key">AIzaSyDciecqjYGhPxF2-4eG7fwYE7g70_LDEtE</string>
+
+    <!--TODO:Add Google maps API key-->
+
+    <string name="google_maps_key">API KEY</string>
+
     <string name="login_with_google_account">Login with Google account</string>
     <string name="login_with_email">Login with email</string>
     <string name="icon">Icon</string>
