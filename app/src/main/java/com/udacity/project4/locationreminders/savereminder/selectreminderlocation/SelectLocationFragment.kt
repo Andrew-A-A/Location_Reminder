@@ -119,7 +119,6 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
             setMessage("Save selected location ?")
             setIcon(R.drawable.icauncherforeground)
             setPositiveButton("Yes") { dialog, id ->
-                Snackbar.make(requireView(), "Location Saved", Snackbar.LENGTH_SHORT).show()
                 _viewModel.latitude.value = selectedPOI.latLng.latitude
                 _viewModel.longitude.value = selectedPOI.latLng.longitude
                 _viewModel.reminderSelectedLocationStr.value = selectedPOI.name

@@ -18,8 +18,7 @@ import com.udacity.project4.R
 import com.udacity.project4.locationreminders.data.FakeReminderDataSource
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Test
@@ -32,7 +31,7 @@ import org.mockito.Mockito.*
 @ExperimentalCoroutinesApi
 class ReminderListFragmentTest {
     private lateinit var viewModel: RemindersListViewModel
-    private lateinit var dataSource: ReminderDataSource
+    private lateinit var dataSource: FakeReminderDataSource
 
 
     @Before
@@ -90,6 +89,7 @@ class ReminderListFragmentTest {
             }
 
             //WHEN - View model has no tasks
+            dataSource.deleteAllReminders()
             viewModel.deleteReminders()
 
             //THEN - Verify that we navigate to the "Save Reminder" Screen

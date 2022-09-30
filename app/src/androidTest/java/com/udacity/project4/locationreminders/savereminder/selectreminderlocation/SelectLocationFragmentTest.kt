@@ -26,7 +26,7 @@ class SelectLocationFragmentTest{
        launchFragmentInContainer<SelectLocationFragment>(Bundle(),R.style.AppTheme)
         //WHEN - Click save button without selecting a location
         onView(withId(R.id.save_btn)).perform(click())
-        //THEN - Toast tells user to select a location appear
+        //THEN - SnackBar tells user to select a location appear
         onView(withText(R.string.please_select_location)).check(matches(isDisplayed()))
     }
 

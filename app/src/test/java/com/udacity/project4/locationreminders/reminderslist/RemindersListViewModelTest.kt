@@ -11,6 +11,7 @@ import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
 import kotlinx.coroutines.test.pauseDispatcher
+import kotlinx.coroutines.test.resumeDispatcher
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.core.IsNot.not
 import org.junit.After
@@ -33,8 +34,7 @@ import org.koin.core.context.stopKoin
  // Declare fake data source
   private lateinit var fakeDataSource: FakeReminderDataSource
 
- // Flag for errors
-   private var shouldReturnError=false
+
 
  //Set the main coroutines dispatcher for unit testing
  @ExperimentalCoroutinesApi
@@ -102,11 +102,14 @@ import org.koin.core.context.stopKoin
  @Test
  fun loadReminders_Error(){
   //GIVEN
-  val reminderList= null
-  shouldReturnError=true
+  val reminderList= mutableListOf<ReminderDTO>()
+
+
 
   //Initialize fake data source with null list
   fakeDataSource= FakeReminderDataSource(reminderList)
+
+  fakeDataSource.setReturnError(true)
 
   //Initialize view model using fake data source
   remindersViewModel= RemindersListViewModel(ApplicationProvider.getApplicationContext(),fakeDataSource)
@@ -118,7 +121,7 @@ import org.koin.core.context.stopKoin
   //THEN
   val viewModelError=remindersViewModel.error.getOrAwaitValue()
   //Make sure that the loaded list is null
-  assertThat(viewModelError,`is`(shouldReturnError))
+  assertThat(viewModelError,`is`(true))
  }
 
 //Test `deleteReminders()` function
@@ -158,6 +161,7 @@ import org.koin.core.context.stopKoin
   //GIVEN
   val reminderList= mutableListOf<ReminderDTO>()
 
+
   //Initialize fake data source with empty reminders list
   fakeDataSource= FakeReminderDataSource(reminderList)
 
@@ -172,10 +176,15 @@ import org.koin.core.context.stopKoin
   remindersViewModel.loadReminders()
 
   //THEN
-  val showLoading=remindersViewModel.showLoading.getOrAwaitValue()
+  var showLoading=remindersViewModel.showLoading.getOrAwaitValue()
 
   //Make sure that the "ShowLoading" Boolean value is true
   assertThat(showLoading,`is`(true))
+
+  mainCoroutineRule.resumeDispatcher()
+
+  showLoading=remindersViewModel.showLoading.getOrAwaitValue()
+  assertThat(showLoading,`is`(false))
  }
 
 
