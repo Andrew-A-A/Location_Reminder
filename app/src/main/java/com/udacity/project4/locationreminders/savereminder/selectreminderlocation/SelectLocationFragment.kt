@@ -31,6 +31,7 @@ import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
+import com.udacity.project4.locationreminders.reminderslist.ReminderListFragmentDirections
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
@@ -38,8 +39,7 @@ import java.util.*
 
 
 private const val  REQUEST_LOCATION_PERMISSION=1
-val androidQ=(Build.VERSION.SDK_INT == Build.VERSION_CODES.Q)
-val androidR_Plus=(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+
 class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
@@ -92,12 +92,21 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
                 Log.e(TAG,"No Location")
             }
         }
+        if (!isForegroundPermissionGranted())
+            requestForegroundPermission()
 
 
         return binding.root
     }
 
-  //Called when user press Save button
+    private fun requestForegroundPermission() {
+        ActivityCompat.requestPermissions(
+            this.requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+            REQUEST_LOCATION_PERMISSION
+        )
+    }
+
+    //Called when user press Save button
     private fun onLocationSelected() {
         confirmDialog = createConfirmDialog()
         //Show Confirm Dialog
@@ -110,14 +119,13 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
             setMessage("Save selected location ?")
             setIcon(R.drawable.icauncherforeground)
             setPositiveButton("Yes") { dialog, id ->
-                dialog.dismiss()
                 Snackbar.make(requireView(), "Location Saved", Snackbar.LENGTH_SHORT).show()
                 _viewModel.latitude.value = selectedPOI.latLng.latitude
                 _viewModel.longitude.value = selectedPOI.latLng.longitude
                 _viewModel.reminderSelectedLocationStr.value = selectedPOI.name
                 _viewModel.selectedPOI.value = selectedPOI
-                _viewModel.navigationCommand.value =
-                    NavigationCommand.Back
+                _viewModel.navigationCommand.value=NavigationCommand.Back
+                dialog.dismiss()
             }
             setNegativeButton(
                 "No"
@@ -137,22 +145,22 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.normal_map -> {
             map.mapType=GoogleMap.MAP_TYPE_NORMAL
-            enableMyLocation()
+            requestForegroundPermission()
             true
         }
         R.id.hybrid_map -> {
             map.mapType=GoogleMap.MAP_TYPE_HYBRID
-            enableMyLocation()
+            requestForegroundPermission()
             true
         }
         R.id.satellite_map -> {
             map.mapType=GoogleMap.MAP_TYPE_SATELLITE
-            enableMyLocation()
+            requestForegroundPermission()
             true
         }
         R.id.terrain_map -> {
             map.mapType=GoogleMap.MAP_TYPE_TERRAIN
-            enableMyLocation()
+            requestForegroundPermission()
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -163,8 +171,6 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         isMapReady=true
         map = googleMap
-        permissionsSnackBar_R_plus=makePermissionsSnackBarR()
-        permissionsSnackBarQ= makePermissionSnackBarQ()
 
         //Set map Style
         map.setMapStyle(MapStyleOptions.loadRawResourceStyle(requireContext(),R.raw.map_style))
@@ -174,10 +180,11 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
         setPoiClick(map)
 
         //Request permissions
-       enableMyLocation()
+           if (isForegroundPermissionGranted())
+               map.isMyLocationEnabled=true
 
 
-        if (isPermissionGranted())
+        if (isForegroundPermissionGranted())
         //Zoom to last detected location
         fusedLocationClient.lastLocation.addOnSuccessListener { location:Location? ->
             if (location!=null){
@@ -192,75 +199,61 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
 
     //Check if Location Permissions are granted
     @Suppress("DEPRECATED_IDENTITY_EQUALS")
-    private fun isPermissionGranted(): Boolean{
+    private fun isForegroundPermissionGranted(): Boolean{
         return ContextCompat.checkSelfPermission(
             requireContext(),
             Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED
     }
 
-    //Check if background location permission is granted
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun isBackgroundPermissionGranted(): Boolean{
-        return ActivityCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.ACCESS_BACKGROUND_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-    }
+
 
 
     //Ask user for permissions depending on android SDK version
-    @SuppressLint("InlinedApi", "MissingPermission", "NewApi")
-    private fun enableMyLocation(){
-        if(isPermissionGranted()){
-            if (androidQ) {
-                if (!isBackgroundPermissionGranted())
-                ActivityCompat.requestPermissions(
-                    requireActivity(),
-                    arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-                    REQUEST_LOCATION_PERMISSION
-                )
-            }
-            map.isMyLocationEnabled=true
-        }
-        else{
-            // Permission denied or not given yet
+//    @SuppressLint("InlinedApi", "MissingPermission", "NewApi")
+//    private fun enableMyLocation(){
+//        if(isForegroundPermissionGranted()){
+//            if (androidQ) {
+//                if (!isBackgroundPermissionGranted())
+//                    requestBackgroundPermission()
+//            }
+//            map.isMyLocationEnabled=true
+//        }
+//        else{
+//            // Permission denied or not given yet
+//
+//            //Ask to go to settings and allow location permission
+//            permissionsSnackBarQ.show()
+//
+//            //Foreground Location permission
+//            val req=   arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION)
+//
+//                ActivityCompat.requestPermissions(
+//                    requireActivity(),
+//                    req,
+//                    REQUEST_LOCATION_PERMISSION
+//                )
+//
+//     //If Android SDK is >= 11 then the User has to go to setting and allow the background permission
+//            // Source: https://developer.android.com/training/location/permissions#background
+//    //If Android SDK is == 10 another window will appear to ask user to allow background location
+//
+//            if (androidR_Plus || androidQ) {
+//                requestBackgroundPermission()
+//            }
+//
+//        }
+//        //Show Snack bar to tell user to Allow background location permission
+//        //in case if android sdk is >= 11
+//        if (androidR_Plus) {
+//            if (!isBackgroundPermissionGranted() && isForegroundPermissionGranted()) {
+//                requestBackgroundPermission()
+//                permissionsSnackBar_R_plus.show()
+//            }
+//        }
+//
+//    }
 
-            //Ask to go to settings and allow location permission
-            permissionsSnackBarQ.show()
 
-            //Foreground Location permission
-            val req=   arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION)
-
-                ActivityCompat.requestPermissions(
-                    requireActivity(),
-                    req,
-                    REQUEST_LOCATION_PERMISSION
-                )
-
-     //If Android SDK is >= 11 then the User has to go to setting and allow the background permission
-            // Source: https://developer.android.com/training/location/permissions#background
-    //If Android SDK is == 10 another window will appear to ask user to allow background location
-
-            if (androidR_Plus || androidQ) {
-                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                    ,REQUEST_LOCATION_PERMISSION)
-            }
-
-        }
-        //Show Snack bar to tell user to Allow background location permission
-        //in case if android sdk is >= 11
-        if (androidR_Plus) {
-            if (!isBackgroundPermissionGranted() && isPermissionGranted()) {
-                ActivityCompat.requestPermissions(
-                    requireActivity(),
-                    arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-                    REQUEST_LOCATION_PERMISSION
-                )
-                permissionsSnackBar_R_plus.show()
-            }
-        }
-
-    }
 
     //Function attach Point of Interest click listener to a given map object
     private fun setPoiClick(map: GoogleMap){
@@ -339,7 +332,7 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
         //Move Camera to last known location
-        if (isMapReady&&isPermissionGranted()) {
+        if (isMapReady&&isForegroundPermissionGranted()) {
             map.isMyLocationEnabled = true
             fusedLocationClient.lastLocation.addOnSuccessListener { location:Location? ->
                 if (location!=null){
@@ -349,22 +342,32 @@ class SelectLocationFragment : BaseFragment(),OnMapReadyCallback {
                 }
             }
         }
-        //Confirm that background permission is granted in case of android Q+
-        if (androidQ|| androidR_Plus) {
-            if (isBackgroundPermissionGranted())
+        //Confirm that foreground location permission is granted
+            if (isForegroundPermissionGranted())
               Toast.makeText(requireContext(), "Permission Granted", Toast.LENGTH_SHORT).show()
-            else {
-                permissionsSnackBar_R_plus = makePermissionsSnackBarR()
-                permissionsSnackBar_R_plus.show()
-            }
-        }
+            else
+                Toast.makeText(requireContext()
+                    , "Foreground Location permission is needed to show current location"
+                    ,Toast.LENGTH_SHORT).show()
     }
     override fun onDestroy() {
         super.onDestroy()
         isMapReady=false
-        //Dismiss SnackBars
-        permissionsSnackBar_R_plus.dismiss()
-        permissionsSnackBarQ.dismiss()
     }
+
+//    @SuppressLint("MissingPermission")
+//    override fun onRequestPermissionsResult(
+//        requestCode: Int,
+//        permissions: Array<out String>,
+//        grantResults: IntArray
+//    ) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+//        if ((isForegroundPermissionGranted()
+//                &&grantResults[0]==PackageManager.PERMISSION_GRANTED) && isMapReady
+//        )
+//        map.isMyLocationEnabled=true
+//        else if(grantResults[0]==PackageManager.PERMISSION_DENIED)
+
+//    }
 }
 private const val TAG="SelectLocationFragment"

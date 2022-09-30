@@ -7,6 +7,8 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.view.*
 import androidx.databinding.DataBindingUtil
+import androidx.navigation.NavController
+import androidx.navigation.findNavController
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.udacity.project4.R
@@ -52,19 +54,7 @@ class ReminderListFragment : BaseFragment() {
         }
     }
 
-    private fun checkGPSStatus(){
-        val locationManager=requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-            AlertDialog.Builder(context).apply {
-                setTitle(getString(R.string.app_name))
-                setIcon(R.drawable.icauncherforeground)
-                setMessage("GPS is off, please turn GPS on")
-                setPositiveButton(getString(R.string.ok)){_,_->
-                }
-                    .create().show()
-            }
-        }
-    }
+
 
     override fun onResume() {
         super.onResume()
@@ -73,13 +63,13 @@ class ReminderListFragment : BaseFragment() {
     }
 
     private fun navigateToAddReminder() {
+
         //use the navigationCommand live data to navigate between the fragments
         _viewModel.navigationCommand.postValue(
             NavigationCommand.To(
                 ReminderListFragmentDirections.toSaveReminder()
             )
         )
-        checkGPSStatus()
     }
 
     private fun setupRecyclerView() {
