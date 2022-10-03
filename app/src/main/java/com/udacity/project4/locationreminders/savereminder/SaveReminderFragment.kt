@@ -73,8 +73,8 @@ class SaveReminderFragment : BaseFragment() {
     }
 
     @SuppressLint("NewApi")
-    private fun checkGpsAndSave() {
-        if (!isLocationEnabled()) {
+    private fun checkGpsAndSave(resolve:Boolean= true) {
+        if (checkForegroundAndBackgroundPermissions()) {
             val locationRequest = LocationRequest.create().apply {
                 priority = LocationRequest.PRIORITY_LOW_POWER
             }
@@ -87,7 +87,7 @@ class SaveReminderFragment : BaseFragment() {
                 settingsClient.checkLocationSettings(builder.build())
 
             locationSettingsResponseTask.addOnFailureListener { exception ->
-                if (exception is ResolvableApiException) {
+                if (exception is ResolvableApiException && resolve) {
                     // Location settings are not satisfied, but this can be fixed
                     // by showing the user a dialog.
                     try {
@@ -107,20 +107,16 @@ class SaveReminderFragment : BaseFragment() {
                     if (!androidQ)
                         saveButtonOnClickListnerLowerQ()
                     else {
-                        Log.e("LOL","Saved")
+                        Log.e("LOL", "Saved")
                         saveButtonOnClickListenerQ()
                     }
                 }
             }
         }
         else{
-            if (!androidQ)
-                saveButtonOnClickListnerLowerQ()
-            else {
-                Log.e(TAG,"Saved Else")
-                saveButtonOnClickListenerQ()
-            }
+            requestBackgroundAndForegroundPermissions()
         }
+
 
 
     }
@@ -142,6 +138,13 @@ class SaveReminderFragment : BaseFragment() {
             checkGpsAndSave()
 
         }
+    }
+
+    @SuppressLint("NewApi")
+    fun checkForegroundAndBackgroundPermissions():Boolean{
+        if (androidQ)
+            return isForegroundPermissionGranted()&&isBackgroundPermissionGranted()
+        return isForegroundPermissionGranted()
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -166,7 +169,7 @@ class SaveReminderFragment : BaseFragment() {
             Log.i(TAG,"addGeofence()")
 
         } else {
-            requestBackgroundPermission()
+            requestBackgroundAndForegroundPermissions()
             if (!isBackgroundPermissionGranted())
                 permissionsSnackBarQ.show()
         }
@@ -247,16 +250,17 @@ class SaveReminderFragment : BaseFragment() {
             Manifest.permission.ACCESS_BACKGROUND_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
     }
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun requestBackgroundPermission() {
+
+    private fun requestBackgroundAndForegroundPermissions() {
         var requests= arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        var resultCode= REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
         if (!isForegroundPermissionGranted()) {
             requests += Manifest.permission.ACCESS_FINE_LOCATION
+            resultCode= REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
         }
-            ActivityCompat.requestPermissions(
-                requireActivity(),
+            requestPermissions(
                 requests,
-                REQUEST_LOCATION_PERMISSION
+                resultCode
             )
     }
     private fun isLocationEnabled(): Boolean {
@@ -272,34 +276,39 @@ class SaveReminderFragment : BaseFragment() {
             Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED
     }
 
-//    override fun onRequestPermissionsResult(
-//        requestCode: Int,
-//        permissions: Array<out String>,
-//        grantResults: IntArray
-//    ) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-//        if (
-//            grantResults.isEmpty() ||
-//            grantResults[2] == PackageManager.PERMISSION_DENIED ||
-//            (requestCode == REQUEST_LOCATION_PERMISSION &&
-//                    grantResults[1] ==
-//                    PackageManager.PERMISSION_DENIED)){
-//            // Permission denied.
-//            Snackbar.make(
-//                requireView(),
-//                R.string.permission_denied_explanation, Snackbar.LENGTH_INDEFINITE
-//            )
-//                .setAction(R.string.settings) {
-//                    // Displays App settings screen.
-//                    startActivity(Intent().apply {
-//                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-//                        data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-//                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//                    })
-//                }.show()
-//        }
-//    }
-    @RequiresApi(Build.VERSION_CODES.Q)
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        Log.d(TAG, "onRequestPermissionResult")
+        if (
+            grantResults.isEmpty() ||
+            grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
+            (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
+                    grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
+                    PackageManager.PERMISSION_DENIED)){
+            // Permission denied.
+            Snackbar.make(
+                requireView(),
+                R.string.permission_denied_explanation, Snackbar.LENGTH_INDEFINITE
+            )
+                .setAction(R.string.settings) {
+                    // Displays App settings screen.
+                    startActivity(Intent().apply {
+                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    })
+                }.show()
+        }
+        else{
+            checkGpsAndSave()
+        }
+    }
+
+    @SuppressLint("NewApi")
     override fun onResume() {
         super.onResume()
         if (isBackgroundPermissionGranted())
@@ -319,10 +328,21 @@ class SaveReminderFragment : BaseFragment() {
             })
         }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode== REQUEST_TURN_DEVICE_LOCATION_ON){
+            checkGpsAndSave(false)
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         permissionsSnackBarQ.dismiss()
     }
 }
-private const val  REQUEST_LOCATION_PERMISSION=1
+private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
+private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
 private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
+private const val TAG = "HuntMainActivity"
+private const val LOCATION_PERMISSION_INDEX = 0
+private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1

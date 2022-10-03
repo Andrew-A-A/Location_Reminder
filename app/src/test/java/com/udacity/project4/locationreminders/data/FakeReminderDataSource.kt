@@ -15,9 +15,7 @@ class FakeReminderDataSource(var reminders: MutableList<ReminderDTO>? = mutableL
      if (shouldReturnError)
          return Result.Error(Exception("Test exception").localizedMessage)
         reminders?.let { return Result.Success(ArrayList(it)) }
-        return Result.Error(
-            Exception("No Reminders Found").message
-        )
+        return Result.Success(emptyList())
     }
 
     override suspend fun saveReminder(reminder: ReminderDTO) {
